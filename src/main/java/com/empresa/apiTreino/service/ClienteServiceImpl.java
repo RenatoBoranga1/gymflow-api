@@ -23,7 +23,10 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public Optional<Cliente> getClienteById(Long id) {
-        return clienteRepository.findById(id);  // Retornando um Optional
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cliente não encontrado com o id: " + id));
+        return Optional.of(cliente);
     }
 
     @Override

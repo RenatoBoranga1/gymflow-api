@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.empresa.apiTreino.model.Cliente;
+import com.empresa.apiTreino.exception.ResourceNotFoundException;
 import com.empresa.apiTreino.service.ClienteService;
 
 @RestController
@@ -37,7 +38,8 @@ public class ClienteController {
     public ResponseEntity<Cliente> getClienteById(@PathVariable Long id) {
         Optional<Cliente> cliente = clienteService.getClienteById(id);
         return cliente.map(ResponseEntity::ok)
-                      .orElseGet(() -> ResponseEntity.notFound().build());
+                      .orElseThrow(() -> new ResourceNotFoundException(
+                              "Cliente não encontrado com o id: " + id));
     }
 
     // Criar um novo cliente
@@ -50,9 +52,6 @@ public class ClienteController {
     // Atualizar um cliente existente
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> updateCliente(@PathVariable Long id, @Valid @RequestBody Cliente cliente) {
-        if (!clienteService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
         cliente.setId(id);
         Cliente updatedCliente = clienteService.updateCliente(id, cliente);
         return ResponseEntity.ok(updatedCliente);
@@ -61,9 +60,6 @@ public class ClienteController {
     // Excluir um cliente por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCliente(@PathVariable Long id) {
-        if (!clienteService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
         clienteService.deleteCliente(id);
         return ResponseEntity.noContent().build();
     }

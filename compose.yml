@@ -20,6 +20,9 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/gymflow
       DB_USERNAME: ${DB_USERNAME:-gymflow}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       SPRING_PROFILES_ACTIVE: prod
     ports:
       - "${SERVER_PORT:-8080}:8080"

@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,6 +69,12 @@ public class GlobalExceptionHandler {
                 "Operação incompatível com os vínculos existentes",
                 request,
                 Map.of());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthentication(
+            AuthenticationException exception, HttpServletRequest request) {
+        return response(HttpStatus.UNAUTHORIZED, "Credenciais inválidas", request, Map.of());
     }
 
     @ExceptionHandler(Exception.class)

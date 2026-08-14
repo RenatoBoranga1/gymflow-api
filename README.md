@@ -1,230 +1,128 @@
-# API Treino
+# GymFlow API
 
-## Visão Geral
+API REST para gerenciar clientes, professores, planos e treinos de uma academia.
 
-Esta API foi desenvolvida para gerenciar clientes, planos de treino e treinos associados a cada plano. Ela utiliza o framework Spring Boot para criação da aplicação e JPA/Hibernate para persistência de dados.
+> O repositório ainda se chama `API---Treino`. **GymFlow API** é a identidade editorial recomendada; nenhuma renomeação remota foi realizada.
 
-## Tecnologias Utilizadas
+## Estado atual
 
-- Java 11+
-- Spring Boot (Spring Data JPA, Spring Validation, Spring Web)
-- H2 Database (banco de dados em memória para desenvolvimento/teste)
-- Maven (gerenciamento de dependências)
-- Postman (ou outra ferramenta para testes de API)
+Este é um projeto acadêmico em evolução. A versão atual demonstra uma aplicação em camadas com Java 17, Spring Boot, Spring Web, Spring Data JPA, Bean Validation e H2. PostgreSQL, Docker, segurança e observabilidade aparecem somente no roadmap — ainda não fazem parte da implementação.
 
-## Estrutura do Projeto
+## Problema
 
-### Pacotes Principais:
+Informações de alunos, profissionais e rotinas de treino precisam ser relacionadas e consultadas de forma consistente. O projeto modela esse domínio e expõe operações CRUD por HTTP.
 
-- **model**: Contém as classes de domínio como Cliente, Plano e Treino.
-- **repository**: Interfaces para acesso aos dados persistidos.
-- **service**: Contém a lógica de negócios.
-- **controller**: Controladores que gerenciam os endpoints da API.
+## Solução
 
-## Modelagem de Dados
+A API organiza quatro entidades principais:
 
-### Entidades Principais:
+- `Cliente`: aluno identificado por nome e e-mail
+- `Professor`: profissional responsável por treinos
+- `Plano`: plano associado a um cliente
+- `Treino`: atividade associada a um plano e a um professor
 
-#### Cliente
+## Arquitetura atual
 
-**Representa um cliente da academia.**
+```mermaid
+flowchart LR
+    Client["Cliente HTTP"] --> Controller["Controllers REST"]
+    Controller --> Service["Services"]
+    Service --> Repository["Spring Data repositories"]
+    Repository --> H2["H2 em memória"]
+    Controller --> Entity["Entidades JPA usadas no contrato HTTP"]
+```
 
-**Atributos:**
-- **id**: Identificador único do cliente.
-- **nome**: Nome completo do cliente.
-- **email**: Endereço de e-mail do cliente.
-- **planos**: Lista de planos associados ao cliente.
+```text
+src/main/java/com/empresa/apiTreino/
+├── controller/   # endpoints HTTP
+├── service/      # operações da aplicação
+├── repository/   # acesso a dados com JpaRepository
+├── model/        # entidades JPA e validações
+└── exception/    # exceção de recurso não encontrado
+```
 
-**Relacionamento:**
-- Um cliente pode ter muitos planos.
+## Stack implementada
 
-#### Plano
+- Java 17
+- Spring Boot 2.5.4
+- Spring Web
+- Spring Data JPA / Hibernate
+- Bean Validation
+- H2 em memória
+- Maven
+- JUnit 5 e Mockito
 
-**Representa um plano de treino associado a um cliente.**
+## Endpoints atuais
 
-**Atributos:**
-- **id**: Identificador único do plano.
-- **nomePlano**: Nome descritivo do plano.
-- **numeroDeTreinos**: Quantidade total de treinos no plano.
-- **cliente**: Referência ao cliente dono do plano.
-- **treinos**: Lista de treinos associados ao plano.
+| Recurso | Operações |
+| --- | --- |
+| Clientes | `GET /clientes`, `GET /clientes/{id}`, `POST /clientes`, `PUT /clientes/{id}`, `DELETE /clientes/{id}` |
+| Professores | `GET /professores`, `GET /professores/{id}`, `POST /professores`, `PUT /professores/{id}`, `DELETE /professores/{id}` |
+| Planos | `GET /planos`, `GET /planos/{id}`, `POST /planos`, `PUT /planos/{id}`, `DELETE /planos/{id}` |
+| Treinos | `GET /treinos`, `GET /treinos/{id}`, `POST /treinos`, `PUT /treinos/{id}`, `DELETE /treinos/{id}` |
 
-**Relacionamento:**
-- Um plano pertence a um cliente.
-- Um plano pode ter muitos treinos.
+Os contratos atuais recebem e retornam as próprias entidades JPA. A separação entre DTOs e entidades pertence à próxima etapa de modernização.
 
-#### Treino
+Recursos inexistentes são tratados de forma centralizada por `GlobalExceptionHandler` e retornam `404 Not Found` com `timestamp`, `status`, `error`, `message` e `path`.
 
-**Representa um treino individual dentro de um plano.**
+## Como executar
 
-**Atributos:**
-- **id**: Identificador único do treino.
-- **descricao**: Descrição do treino.
-- **plano**: Referência ao plano associado.
+### Pré-requisitos
 
-**Relacionamento:**
-- Um treino pertence a um plano.
+- JDK 17
+- Maven 3.8+
 
-## Endpoints Disponíveis
+```bash
+git clone https://github.com/RenatoBoranga1/API---Treino.git
+cd API---Treino
+mvn spring-boot:run
+```
 
-### Cliente
+A API fica disponível em `http://localhost:8080`. O H2 Console de desenvolvimento fica em `http://localhost:8080/h2-console`.
 
-**Listar todos os clientes:**
-- `GET /clientes`
+As credenciais atuais do H2 são exclusivamente locais e demonstrativas. O projeto não deve ser usado em produção com essa configuração.
 
-**Obter cliente por ID:**
-- `GET /clientes/{id}`
+## Testes
 
-**Criar um novo cliente:**
-- `POST /clientes`
-  ```json
-  {
-      "nome": "João da Silva",
-      "email": "joao.silva@example.com"
-  }
+A suíte atual contém dois testes unitários de `ClienteServiceImpl` e um teste HTTP do contrato `404 Not Found`.
 
-**Atualizar cliente:**
-- `PUT /clientes/{id}`
-  ```json
-   {
-    "nome": "João da Silva Atualizado",
-    "email": "joao.silva.atualizado@example.com"
-   }
+```bash
+mvn test
+```
 
-**Deletar cliente:**
-- `DELETE /clientes/{id}`
+Para validar também o empacotamento:
 
-### Plano
+```bash
+mvn clean package
+```
 
-**Listar todos os planos:**
-- `GET /planos`
+O caso de cliente inexistente lança `ResourceNotFoundException` no serviço e é convertido pelo handler global em resposta HTTP 404.
 
-**Obter plano por ID:**
-- `GET /planos/{id}`
+## Limitações conhecidas
 
-**Criar um novo plano:**
-- `POST /planos`
-  ```json
-  {
-      "nomePlano": "Plano A",
-      "numeroDeTreinos": 10,
-      "clienteId": 1
-  }
+- Spring Boot 2.5.4 está desatualizado e será atualizado de forma controlada
+- persistência somente em H2, recriada a cada execução
+- entidades JPA expostas diretamente nos contratos REST
+- tratamento global cobre recursos inexistentes; outros erros HTTP ainda precisam de contratos próprios
+- cobertura de testes restrita a uma parte do serviço de clientes
+- sem paginação, filtros, documentação OpenAPI, autenticação ou autorização
+- sem Docker, migrations, CI/CD ou observabilidade
 
-**Deletar cliente:**
-- `DELETE /clientes/{id}`
+## Roadmap
 
-### Plano
+Itens futuros, ainda não implementados:
 
-**Listar todos os planos:**
-- `GET /planos`
-
-**Obter plano por ID:**
-- `GET /planos/{id}`
-
-**Criar um novo plano:**
-- `POST /planos`
-  ```json
-  {
-      "nomePlano": "Plano A",
-      "numeroDeTreinos": 10,
-      "clienteId": 1
-  }
-
-**Atualizar planos:**
-- `PUT /planos/{id}`
-  ```json
-    {
-    "nomePlano": "Plano A",
-    "numeroDeTreinos": 10,
-    "clienteId": 1
-    }
-
-
-    {
-    "nomePlano": "Plano A Atualizado",
-    "numeroDeTreinos": 15
-    }
-
-**Deletar plano:**
-- `DELETE /planos/{id}`
-
-### Treino
-
-**Listar todos os treinos:**
-- `GET /treinos`
-
-**Obter treino por ID:**
-- `GET /treinos/{id}`
-
-**Criar um novo treino:**
-- `POST /treinos`
-  ```json
-  {
-      "descricao": "Treino de Peito",
-      "planoId": 1
-  }
-
-**Criar um novo treino:**
-- `POST /treinos`
-  ```json
-  {
-      "descricao": "Treino de Peito",
-      "planoId": 1
-  }
-
-**Atualizar treino:**
-- `PUT /treinos/{id}`
-  ```json
-  {
-      "descricao": "Treino de Peito Avançado"
-  }
-
-**Deletar treino:**
-- `DELETE /treinos/{id}`
-
-## Configuração Local
-
-### Clone o repositório:
-
-sh
-git clone <URL_DO_REPOSITORIO>
-cd apiTreino
-
-## Configure o ambiente:
-    Certifique-se de ter o Java 11+ instalado.
-
-    Configure o Maven no PATH.
-
-    Execute a aplicação:
-    sh
-
-## sh
-    mvn spring-boot:run
-    Acesse a aplicação em http://localhost:8080.
-
-## Testando a API
-    Use o Postman, Insomnia ou qualquer cliente HTTP para consumir os endpoints disponíveis.
-
-    O banco de dados H2 pode ser acessado em http://localhost:8080/h2-console (usuário padrão: sa, senha: vazia).
-
-## Próximos Passos
-    Implementar autenticação e autorização (Spring Security).
-
-    Adicionar validações personalizadas para campos específicos.
-
-    Criar testes unitários e de integração.
-
-## Contribuições
-    Sinta-se à vontade para abrir issues ou enviar pull requests para melhorias no projeto!
+1. atualizar para Java 21 e uma versão estável atual do Spring Boot
+2. adotar PostgreSQL e Flyway com configuração externa por ambiente
+3. separar DTOs de entidades; avaliar MapStruct onde reduzir mapeamento repetitivo
+4. ampliar a padronização para validações e demais respostas de erro
+5. adicionar paginação, filtros e OpenAPI/Swagger
+6. criar Dockerfile, Docker Compose e health check
+7. ampliar testes unitários e adicionar testes de integração com Testcontainers
+8. configurar CI/CD e logging estruturado
+9. somente depois da base: Spring Security, JWT, refresh token e RBAC
+10. avaliar cache e observabilidade conforme necessidades comprovadas
 
 ## Autor
-    Desenvolvido por Renato Boranga.
 
-
-
-
-
-
-
-
+Renato Boranga

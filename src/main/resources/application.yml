@@ -26,3 +26,30 @@ server:
 logging:
   level:
     com.renatoboranga.gymflow: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  info:
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+info:
+  app:
+    name: GymFlow API
+    description: API REST para gestão de academias
+    java: 21

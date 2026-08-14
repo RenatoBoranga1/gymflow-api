@@ -30,7 +30,7 @@ class PostgreSqlIntegrationTest {
 
     @Container
     static final PostgreSQLContainer POSTGRES =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres:17-alpine"))
+            new PostgreSQLContainer(DockerImageName.parse("postgres:17-alpine"))
                     .withDatabaseName("gymflow_test")
                     .withUsername("gymflow_test")
                     .withPassword("test-only-password");
